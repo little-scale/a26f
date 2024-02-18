@@ -1,0 +1,86 @@
+; Atari 2600 Music Interface - 6507 code
+; Compile with DASM.exe
+
+; By little-scale
+
+
+	processor 6502		; set target processor
+	include vcs.h		; include Atari 2600-specific locations and subroutines
+	include macro.h		; include macros
+
+	org $F000		
+
+Start
+     	CLEAN_START
+
+; lets reset all sound registers...
+	lda #0			; load 0 into the accumulator
+	sta AUDV0		; store 0 in the volume of channel 0
+	sta AUDV1		; store 0 in the volume of channel 1
+	sta AUDC0		; store 0 in the control of channel 0
+	sta AUDC1		; store 0 in the control of channel 1
+	sta AUDF0		; store 0 in the frequency of channel 0
+	sta AUDF1		; store 0 in the frequency of channel 1
+
+MainLoop
+
+	lda INPT4		; load the status of the player 1 button into the accumulator 
+	bmi DontRead        	; if there is nothing pressed, dont read data
+
+   	lda SWCHA		; load the directional information of both joysticks into the accumulator
+   	and #%11100000		; for now, we are only interested in our three signifier bits...	
+	cmp #%00000000		; let us compare the accumulator to a value
+	beq REG0		; and jump to a register-loading function if the two are equal
+	cmp #%00100000		; let us compare the accumulator to a value
+	beq REG1		; and jump to a register-loading function if the two are equal
+	cmp #%01000000		; let us compare the accumulator to a value
+	beq REG2		; and jump to a register-loading function if the two are equal
+	cmp #%01100000		; let us compare the accumulator to a value
+	beq REG3		; and jump to a register-loading function if the two are equal
+	cmp #%10000000		; let us compare the accumulator to a value
+	beq REG4		; and jump to a register-loading function if the two are equal
+	cmp #%10100000		; let us compare the accumulator to a value
+	beq REG5		; and jump to a register-loading function if the two are equal
+	jmp DontRead		; if it was a false value, jump back to the main loop
+
+
+REG0
+                lda SWCHA	; load the directional information of both joysticks into the accumulator
+                sta AUDC0	; store the data in the audio control register of channel 0
+                jmp DontRead	; jump back to main loop and wait for next lot of data
+
+
+
+REG1
+               	lda SWCHA	; load the directional information of both joysticks into the accumulator
+                sta AUDC1	; store the data in the audio control register of channel 1
+                jmp DontRead	; jump back to main loop and wait for next lot of data
+
+REG2
+		lda SWCHA	; load the directional information of both joysticks into the accumulator
+                sta AUDF0	; store the data in the audio frequency register of channel 0
+                jmp DontRead	; jump back to main loop and wait for next lot of data
+
+REG3
+               	lda SWCHA	; load the directional information of both joysticks into the accumulator
+                sta AUDF1	; store the data in the audio frequency register of channel 1
+                jmp DontRead	; jump back to main loop and wait for next lot of data
+
+REG4
+          	lda SWCHA	; load the directional information of both joysticks into the accumulator
+                sta AUDV0	; store the data in the audio volume register of channel 0
+                jmp DontRead	; jump back to main loop and wait for next lot of data
+
+
+REG5
+              	lda SWCHA	; load the directional information of both joysticks into the accumulator
+                sta AUDV1	; store the data in the audio volume register of channel 1
+
+
+
+DontRead
+	jmp  MainLoop		; jump back to main loop and wait for next lot of data
+
+	org $FFFC
+	.word Start
+	.word Start
